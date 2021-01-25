@@ -8,5 +8,5 @@ type MethodList []string
 
 type Router interface {
 	Add(string, Handler, MethodList) error
-	Run()
+	Run(...string)
 }

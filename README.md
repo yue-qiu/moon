@@ -21,4 +21,4 @@ func main() {
 }
 ```
 
-Port 8080 is used by default. GET is the only supported method at present.
+Port 8080 is used by default. GET and POST are supported method at present.

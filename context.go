@@ -24,3 +24,8 @@ func (c *Context) Method() string {
 func (c *Context) GetHeaderField(key string) string {
 	return c.req.Header.Get(key)
 }
+
+func (c *Context) GetFormKey(key string) []string {
+	(c.req).ParseForm()
+	return (c.req).Form[key]
+}
