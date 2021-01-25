@@ -18,7 +18,7 @@ func TestEngine_Run(t *testing.T) {
 		}, []string{"GET"})
 
 		r.Add("/testPost", func(ctx *Context) {
-			ctx.Write([]byte(ctx.GetFormKey("name")[0]))
+			ctx.Write([]byte(ctx.GetDefaultFormField("name", "rose")[0]))
 		}, []string{"POST"})
 
 		r.Run()
