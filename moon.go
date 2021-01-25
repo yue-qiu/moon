@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 const (
@@ -15,6 +16,7 @@ const (
 type Engine struct {
 	ftOfGet ForwardingTable
 	ftOFPost ForwardingTable
+	pool    sync.Pool
 }
 
 func (e *Engine) Add(pattern string, handler Handler, methods MethodList) error {
@@ -32,21 +34,22 @@ func (e *Engine) Add(pattern string, handler Handler, methods MethodList) error 
 }
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c := Context{
-		Rsp:  w,
-		Req:  r,
+	c := e.pool.Get().(*Context)
+	c.Req = r
+	c.Rsp = w
 
-	}
 	switch r.Method {
 	case GET:
 		if handler, ok := e.ftOfGet[r.URL.Path]; ok {
-			handler(&c)
+			handler(c)
 		}
 	case POST:
 		if handler, ok := e.ftOFPost[r.URL.Path]; ok {
-			handler(&c)
+			handler(c)
 		}
 	}
+
+	e.pool.Put(c)
 }
 
 func (e *Engine) Run(addr ...string) {
@@ -61,8 +64,13 @@ func (e *Engine) Run(addr ...string) {
 }
 
 func Default() Router {
-	return &Engine{
+	engine := &Engine{
 		ftOfGet: map[string]Handler{},
 		ftOFPost: map[string]Handler{},
 	}
+	engine.pool.New = func() interface{} {
+		return &Context{}
+	}
+
+	return engine
 }
