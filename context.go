@@ -8,29 +8,25 @@ import (
 const MAXMULTIPARTYMEM = 8 << 20 // 8MB
 
 type Context struct {
-	rsp http.ResponseWriter
-	req *http.Request
+	Rsp http.ResponseWriter
+	Req *http.Request
 }
 
 func (c *Context) Write(msg []byte) (int, error) {
-	i, err := c.rsp.Write(msg)
+	i, err := c.Rsp.Write(msg)
 	if err != nil {
 		return 0, err
 	}
 	return i, nil
 }
 
-func (c *Context) Method() string {
-	return c.req.Method
-}
-
 func (c *Context) GetHeaderField(key string) string {
-	return c.req.Header.Get(key)
+	return c.Req.Header.Get(key)
 }
 
 func (c *Context) GetFormField(key string) []string {
-	(c.req).ParseForm()
-	return (c.req).Form[key]
+	(c.Req).ParseForm()
+	return (c.Req).Form[key]
 }
 
 func (c *Context) GetDefaultFormField(key string, val string) []string {
@@ -42,8 +38,8 @@ func (c *Context) GetDefaultFormField(key string, val string) []string {
 }
 
 func (c *Context) GetPostFormField(key string) []string {
-	(c.req).ParseForm()
-	return (c.req).PostForm[key]
+	(c.Req).ParseForm()
+	return (c.Req).PostForm[key]
 }
 
 func (c *Context) GetDefaultPostFormField(key string, val string) []string {
@@ -55,7 +51,7 @@ func (c *Context) GetDefaultPostFormField(key string, val string) []string {
 }
 
 func (c *Context) GetQueryField(key string) string {
-	return c.req.URL.Query().Get(key)
+	return c.Req.URL.Query().Get(key)
 }
 
 func (c *Context) GetDefaultQueryField(key string, val string) string {
@@ -67,10 +63,15 @@ func (c *Context) GetDefaultQueryField(key string, val string) string {
 }
 
 func (c *Context) GetMultipartForm() *multipart.Form {
-	(c.req).ParseMultipartForm(MAXMULTIPARTYMEM)
-	return c.req.MultipartForm
+	(c.Req).ParseMultipartForm(MAXMULTIPARTYMEM)
+	return c.Req.MultipartForm
 }
 
-func (c *Context) GetProto() string {
-	return c.req.Proto
+func (c *Context) Copy() Context {
+	cp := Context{
+		Rsp: c.Rsp,
+		Req: c.Req,
+	}
+
+	return cp
 }

@@ -33,8 +33,9 @@ func (e *Engine) Add(pattern string, handler Handler, methods MethodList) error 
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := Context{
-		rsp:  w,
-		req:  r,
+		Rsp:  w,
+		Req:  r,
+
 	}
 	switch r.Method {
 	case GET:
