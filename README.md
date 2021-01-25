@@ -1,6 +1,6 @@
 ## moon
 
-moon is a toy web framework written in Golang
+moon is a toy web framework written in Golang.
 
 ### Usage
 
@@ -24,11 +24,11 @@ func main() {
 		form := ctx.GetMultipartForm()
 		if fileHeader, ok := form.File["file"]; ok {
 			fmt.Println(fileHeader.Filename)
-        }
+                }
 	}, []string{"POST"})
 
-	r.Run()
+	r.Run(":8000")
 }
 ```
 
-Port 8080 is used by default. GET and POST are supported at present.
+`Run()` uses port 8080 by default if no parameters are specified . GET and POST are supported at present.
