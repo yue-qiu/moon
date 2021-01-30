@@ -73,30 +73,31 @@ func (n *Tree) insert(path string, handle Handler) {
 			path: n.path[i:],
 			children: make([]*Tree, 0),
 		}
-		child.checkStatus()
 		for idx := range n.indices {
 			child.children = append(child.children, n.children[idx])
 		}
-		n.indices = string(n.path[i])
+		n.indices = string(child.path[0])
 		n.path = n.path[: i]
 		n.children = []*Tree{child}
 		n.handle = nil
-		n.checkStatus()
 	}
 
 	// generate a new Node
 	if i < len(path) {
 		idx := n.getIndex(path[i])
+		if path[i] == 'r' {
+			fmt.Println(n.path, path, idx, n.indices)
+		}
 		if idx != -1 {
-			n.children[i].insert(path[i:], handle)
+			n.children[idx].insert(path[i:], handle)
 		} else {
 			child := &Tree{
 				path:     path[i:],
 				handle:   handle,
 				children: make([]*Tree, 0),
 			}
-			child.checkStatus()
-			n.indices += string(path[i])
+			child.divideNodeByParam()
+			n.indices += string(child.path[0])
 			n.children = append(n.children, child)
 		}
 	}
@@ -127,12 +128,40 @@ func (n *Tree) Retrieve(path string) Handler {
 }
 
 // 根据节点路径是否含命名参数更新状态
-func (n *Tree) checkStatus() {
-	_, _, ok := ParseNamedParam(n.path)
-	if ok {
-		n.nType = PARAM
-	} else {
+func (n *Tree) divideNodeByParam() {
+	param, start, ok := ParseNamedParam(n.path)
+	if param == n.path {
+		return
+	}
+	if !ok {
 		n.nType = STATIC
+		return
+	}
+	if start == 0 {
+		child := &Tree{
+			path: n.path[len(param):],
+			children: make([]*Tree, 0),
+			handle: n.handle,
+		}
+		child.divideNodeByParam()
+		n.path = n.path[: len(param)]
+		n.handle = nil
+		n.indices += string(child.path[0])
+		n.nType = PARAM
+		n.children = append(n.children, child)
+	} else {
+		child := &Tree{
+			path:     n.path[start:],
+			nType:    PARAM,
+			children: make([]*Tree, 0),
+			handle:   n.handle,
+		}
+		child.divideNodeByParam()
+		n.path = n.path[: start]
+		n.handle = nil
+		n.indices += string(child.path[0])
+		n.nType = STATIC
+		n.children = append(n.children, child)
 	}
 }
 

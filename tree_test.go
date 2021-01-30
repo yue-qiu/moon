@@ -28,10 +28,10 @@ func TestNode_AddRouter(t *testing.T) {
 	func3 := func(ctx *Context) {}
 	func4 := func(ctx *Context) {}
 
-	r.AddRouter("/hello/:name/:surname", func1)
-	r.AddRouter("/:name/bye", func2)
-	r.AddRouter("/run/:name", func3)
+	r.AddRouter("/hello/:name1/:surname", func1)
+	r.AddRouter("/:name2/bye", func2)
+	r.AddRouter("/run/:name3", func3)
 	r.AddRouter("/run/flask", func4)
-	assert.Equal(t, r.Has("/jack/bye"), true)
+	assert.True(t, r.Has("/jack/bye"))
 	//r.AddRouter("/run/:animal", nil)
 }
