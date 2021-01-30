@@ -1,10 +1,7 @@
 package moon
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 )
 
@@ -14,42 +11,32 @@ const (
 )
 
 type Engine struct {
-	ftOfGet ForwardingTable
-	ftOFPost ForwardingTable
+	ft      map[string]*Tree
 	pool    sync.Pool
 }
 
-func (e *Engine) Add(pattern string, handler Handler, methods MethodList) error {
+
+func (e *Engine) Add(pattern string, handle Handler, methods MethodList) error {
 	for _, method := range methods {
-		switch strings.ToUpper(method) {
-		case GET:
-			e.ftOfGet[pattern] = handler
-		case POST:
-			e.ftOFPost[pattern] = handler
-		default:
-			return errors.New(fmt.Sprintf("Unsupported Method: %s\n", method))
+		if e.ft[method] == nil {
+			e.ft[method] = &Tree{
+				children: make([]*Tree, 0),
+			}
 		}
+		e.ft[method].AddRouter(pattern, handle)
 	}
 	return nil
 }
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	c := e.pool.Get().(*Context)
-	c.Req = r
-	c.Rsp = w
+	ctx := e.pool.Get().(*Context)
+	ctx.Req = r
+	ctx.Rsp = w
 
-	switch r.Method {
-	case GET:
-		if handler, ok := e.ftOfGet[r.URL.Path]; ok {
-			handler(c)
-		}
-	case POST:
-		if handler, ok := e.ftOFPost[r.URL.Path]; ok {
-			handler(c)
-		}
-	}
+	handle := e.ft[r.Method].Retrieve(ctx.Req.URL.Path)
+	handle(ctx)
 
-	e.pool.Put(c)
+	e.pool.Put(ctx)
 }
 
 func (e *Engine) Run(addr ...string) {
@@ -65,8 +52,7 @@ func (e *Engine) Run(addr ...string) {
 
 func Default() Router {
 	engine := &Engine{
-		ftOfGet: map[string]Handler{},
-		ftOFPost: map[string]Handler{},
+		ft: make(map[string]*Tree),
 	}
 	engine.pool.New = func() interface{} {
 		return &Context{}
