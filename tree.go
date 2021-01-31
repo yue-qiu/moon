@@ -85,9 +85,6 @@ func (n *Tree) insert(path string, handle Handler) {
 	// generate a new Node
 	if i < len(path) {
 		idx := n.getIndex(path[i])
-		if path[i] == 'r' {
-			fmt.Println(n.path, path, idx, n.indices)
-		}
 		if idx != -1 {
 			n.children[idx].insert(path[i:], handle)
 		} else {
@@ -103,28 +100,36 @@ func (n *Tree) insert(path string, handle Handler) {
 	}
 }
 
-func (n *Tree) Has(path string) bool {
-	i := longestCommonPrefix(n.path, path)
-	if i == len(path) {
-		return true
+func (n *Tree) Retrieve(path string, ctx *Context) Handler {
+	if len(path) > 0 && path[len(path)-1] != '/' {
+		path += "/"
 	}
-	idx := n.getIndex(path[i])
-	if idx == -1 {
-		return false
-	}
-	return n.children[idx].Has(path[i:])
-}
 
-func (n *Tree) Retrieve(path string) Handler {
 	i := longestCommonPrefix(n.path, path)
-	if i == len(path) {
+	if i == len(path) && n.nType == STATIC {
 		return n.handle
 	}
+
+	// 匹配命名参数与真实路径
+	if n.nType == PARAM {
+		p := 0
+		for p < len(path) && path[p] != '/' {
+			p++
+		}
+		ctx.Params[n.path[1:]] = path[: p]
+		path = path[p:]
+		idx := n.getIndex(path[0])
+		return n.children[idx].Retrieve(path, ctx)
+	}
+
 	idx := n.getIndex(path[i])
 	if idx == -1 {
+		if paramIdx := n.getIndex(':'); paramIdx != -1 {
+			return n.children[paramIdx].Retrieve(path[i:], ctx)
+		}
 		return nil
 	}
-	return n.children[idx].Retrieve(path[i:])
+	return n.children[idx].Retrieve(path[i:], ctx)
 }
 
 // 根据节点路径是否含命名参数更新状态

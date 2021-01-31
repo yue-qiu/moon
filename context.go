@@ -10,6 +10,21 @@ const MAXMULTIPARTYMEM = 8 << 20 // 8MB
 type Context struct {
 	Rsp http.ResponseWriter
 	Req *http.Request
+	Params
+}
+
+func (c *Context) Init(rsp http.ResponseWriter, req *http.Request) {
+	c.Req = req
+	c.Rsp = rsp
+	c.Params = make(map[string]string)
+}
+
+func (c *Context) GetParam(key string) (val string) {
+	return c.Params[key]
+}
+
+func (c *Context) ParamsCount() (count int) {
+	return c.Params.Count()
 }
 
 func (c *Context) Write(msg []byte) (int, error) {

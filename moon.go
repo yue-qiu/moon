@@ -2,13 +2,12 @@ package moon
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 )
 
-const (
-	GET = "GET"
-	POST = "POST"
-)
+var HTTPMETHODS = map[string]bool{"GET": true, "POST": true, "PUT": true, "HEAD": true, "DELETE": true,
+	"OPTIONS": true, "CONNECT": true, "TRACE": true, "PATCH": true}
 
 type Engine struct {
 	ft      map[string]*Tree
@@ -18,6 +17,10 @@ type Engine struct {
 
 func (e *Engine) Add(pattern string, handle Handler, methods MethodList) error {
 	for _, method := range methods {
+		method = strings.ToUpper(method)
+		if HTTPMETHODS[method] == false {
+			continue
+		}
 		if e.ft[method] == nil {
 			e.ft[method] = &Tree{
 				children: make([]*Tree, 0),
@@ -30,10 +33,9 @@ func (e *Engine) Add(pattern string, handle Handler, methods MethodList) error {
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := e.pool.Get().(*Context)
-	ctx.Req = r
-	ctx.Rsp = w
+	ctx.Init(w, r)
 
-	handle := e.ft[r.Method].Retrieve(ctx.Req.URL.Path)
+	handle := e.ft[r.Method].Retrieve(ctx.Req.URL.Path, ctx)
 	handle(ctx)
 
 	e.pool.Put(ctx)
@@ -55,7 +57,7 @@ func Default() Router {
 		ft: make(map[string]*Tree),
 	}
 	engine.pool.New = func() interface{} {
-		return &Context{}
+		return new(Context)
 	}
 
 	return engine

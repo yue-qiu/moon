@@ -32,6 +32,5 @@ func TestNode_AddRouter(t *testing.T) {
 	r.AddRouter("/:name2/bye", func2)
 	r.AddRouter("/run/:name3", func3)
 	r.AddRouter("/run/flask", func4)
-	assert.True(t, r.Has("/jack/bye"))
 	//r.AddRouter("/run/:animal", nil)
 }
