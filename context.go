@@ -16,7 +16,7 @@ type Context struct {
 func (c *Context) Init(rsp http.ResponseWriter, req *http.Request) {
 	c.Req = req
 	c.Rsp = rsp
-	c.Params = make(map[string]string)
+	c.Params = NewParams()
 }
 
 func (c *Context) GetParam(key string) (val string) {
